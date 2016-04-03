@@ -1,0 +1,5 @@
+('c:\\python34\\lib\\site-packages\\pythonqwt-0.5.5-py3.4.egg',
+ None,
+ {'*.py', 'EGG-INFO', '*.pyd', '*.so', '*.pyc', '*.pyo'},
+ 'DATA',
+ [])
