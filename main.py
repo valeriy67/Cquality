@@ -4,7 +4,7 @@ __author__ = 'Valeriy'
 import sys
 
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPen
 from interface import *
 from dlgselect import *
 from dlgmodifyui import *
@@ -51,7 +51,7 @@ class MyWin(QtWidgets.QMainWindow):
         self.model = QSqlTableModel()
         Data = (None, [])
         self.viewTable(Data, False)
-        self.drawMap(Data)
+        self.drawMap(Data,(0, 0))
 
         return None
 
@@ -71,7 +71,7 @@ class MyWin(QtWidgets.QMainWindow):
         print(dbData)
         self.fillVisuaData(self.idData, dbData, fillData, self.flFilter)
         self.clearDraw()
-        self.drawMap(dbData)
+        self.drawMap(dbData,fillData)
         return None
 
     def cmbSetYear(self):
@@ -81,7 +81,7 @@ class MyWin(QtWidgets.QMainWindow):
         fillData = self.getFillData(self.idData)
         self.fillVisuaData(self.idData, dbData, fillData, self.flFilter)
         self.clearDraw()
-        self.drawMap(dbData)
+        self.drawMap(dbData, fillData)
         return None
 
     def openModifyData(self):
@@ -101,7 +101,7 @@ class MyWin(QtWidgets.QMainWindow):
         fillData = self.getFillData(self.idData)
         self.fillVisuaData(self.idData, dbData, fillData, self.flFilter)
         self.clearDraw()
-        self.drawMap(dbData)
+        self.drawMap(dbData, fillData)
         return None
 
     def setIntermed(self):
@@ -110,7 +110,7 @@ class MyWin(QtWidgets.QMainWindow):
         fillData = self.getFillData(self.idData)
         self.fillVisuaData(self.idData, dbData, fillData, self.flFilter)
         self.clearDraw()
-        self.drawMap(dbData)
+        self.drawMap(dbData, fillData)
         return None
 
     def startAnl(self):
@@ -152,6 +152,9 @@ class MyWin(QtWidgets.QMainWindow):
         return dataPrep
 
     def getFillData(self, idData):
+        '''
+        :return SMax, SMin, OnlyReady, верхня межа, нижня межа, тип готова, проміжна:
+        '''
         self.ui.grbSelectType.setEnabled(True)
         Data = dBase.queryGetDataSign(idData[0], idData[1])
         if Data[2]:
@@ -236,33 +239,103 @@ class MyWin(QtWidgets.QMainWindow):
         self.ui.DataTable.show()
         return None
 
-    def drawMap(self, dbData):
-        if (dbData[1] != []):
-            x = np.arange(0, len(dbData[1]), 1)
-            y = dbData[1]
-        else:
-            x = []
-            y = []
-
-        # x = np.arange(1,7,1)
-        # y = [3,4,2,1,3,5]
+    def drawMap(self, dbData, flData):
+        statData = self.calcData(dbData)
+        avgData = statData[0]
+        stdData = statData[1]
+        countData = len(dbData[1])
+        maxData = flData[0]
+        minData = flData[1]
 
         self.plot.autoFillBackground()
         self.plot.setTitle("A Simple Map Demonstration")
         self.plot.setCanvasBackground(Qt.white)
         self.plot.setAxisTitle(QwtPlot.xBottom, "серії")
-        self.plot.setAxisTitle(QwtPlot.yLeft, "y")
+        self.plot.setAxisTitle(QwtPlot.yLeft, "")
+
+        # if (dbData[1] != []):
+
         # self.plot.setAxisScale(QwtPlot.xBottom, 0.0, 1.0)
-        # self.plot.setAxisScale(QwtPlot.yLeft, 0.54, 0.56)
-        self.curve = QwtPlotCurve()
-        self.curve.setData(x, y)
-        self.curve.attach(self.plot)
+        if ((minData != 0) and (maxData != 0)):
+            cfScale = 0.01
+            yScaleMin = minData - minData*cfScale
+            yScaleMax = maxData + maxData*cfScale
+            self.plot.setAxisScale(QwtPlot.yLeft, yScaleMin, yScaleMax)
+
+    # Готуємо  графіки для виводу
+        self.cMax = QwtPlotCurve()
+        self.cMax.setPen(QPen(Qt.red))
+        self.cMax.attach(self.plot)
+
+        self.cMin = QwtPlotCurve()
+        self.cMin.setPen(QPen(Qt.red))
+        self.cMin.attach(self.plot)
+
+        self.cMap = QwtPlotCurve()
+        self.cMap.setPen(QPen(Qt.black))
+        self.cMap.attach(self.plot)
+
+        self.cAvg = QwtPlotCurve()
+        self.cAvg.setPen(QPen(Qt.darkBlue))
+        self.cAvg.attach(self.plot)
+
+        self.c3SigmaP = QwtPlotCurve()
+        self.c3SigmaP.setPen(QPen(Qt.green))
+        self.c3SigmaP.attach(self.plot)
+        self.c3SigmaN = QwtPlotCurve()
+        self.c3SigmaN.setPen(QPen(Qt.green))
+        self.c3SigmaN.attach(self.plot)
+
+        self.c2SigmaP = QwtPlotCurve()
+        self.c2SigmaP.setPen(QPen(Qt.blue))
+        self.c2SigmaP.attach(self.plot)
+        self.c2SigmaN = QwtPlotCurve()
+        self.c2SigmaN.setPen(QPen(Qt.blue))
+        self.c2SigmaN.attach(self.plot)
+
+
+    # готуємо дані для виводу
+        xData = np.arange(0, countData, 1)
+    # лінія max, min границь препарату
+        yMaxData = [maxData]*countData
+        self.cMax.setData(xData, yMaxData)
+        yMinData = [minData]*countData
+        self.cMin.setData(xData, yMinData)
+    # карта Шугарта
+        yDataMap = dbData[1]
+        self.cMap.setData(xData, yDataMap)
+    # лінія середнього значення
+        yAvgData = [avgData]*countData
+        self.cAvg.setData(xData, yAvgData)
+    # лінії 3 sigma значення
+        y3SigmaP = None
+        y3SigmaN = None
+        y2SigmaP = None
+        y2SigmaN = None
+        if stdData != None:
+            y3SigmaP = [avgData + 3*stdData]*countData
+            y3SigmaN = [avgData - 3*stdData]*countData
+            y2SigmaP = [avgData + 2*stdData]*countData
+            y2SigmaN = [avgData - 2*stdData]*countData
+        self.c3SigmaP.setData(xData, y3SigmaP)
+        self.c3SigmaN.setData(xData, y3SigmaN)
+        self.c2SigmaP.setData(xData, y2SigmaP)
+        self.c2SigmaN.setData(xData, y2SigmaN)
+
+
         self.plot.replot()
         # self.plot.show()
         return None
 
     def clearDraw(self):
-        self.curve.detach()
+        self.cMap.detach()
+        self.cAvg.detach()
+        self.c3SigmaP.detach()
+        self.c3SigmaN.detach()
+        self.c2SigmaP.detach()
+        self.c2SigmaN.detach()
+        self.cMax.detach()
+        self.cMin.detach()
         self.plot.replot()
         return None
 
