@@ -49,7 +49,7 @@ class MyWin(QtWidgets.QMainWindow):
         # Тимчасово виводио у лабел
         self.ui.lbYear.setText(self.idYear)
         self.model = QSqlTableModel()
-        Data = (None, None)
+        Data = (None, [])
         self.viewTable(Data, False)
         self.drawMap(Data)
 
@@ -68,9 +68,10 @@ class MyWin(QtWidgets.QMainWindow):
         self.viewTable(self.idData, self.flFilter)
         fillData = self.getFillData(self.idData)
         dbData = self.getDataPrep(self.idData)
+        print(dbData)
         self.fillVisuaData(self.idData, dbData, fillData, self.flFilter)
         self.clearDraw()
-        # self.drawMap(dbData)
+        self.drawMap(dbData)
         return None
 
     def cmbSetYear(self):
@@ -79,8 +80,8 @@ class MyWin(QtWidgets.QMainWindow):
         dbData = self.getDataPrep(self.idData)
         fillData = self.getFillData(self.idData)
         self.fillVisuaData(self.idData, dbData, fillData, self.flFilter)
-        # self.clearDraw()
-        # self.drawMap(self.idData[0], self.idData[1], self.idYear)
+        self.clearDraw()
+        self.drawMap(dbData)
         return None
 
     def openModifyData(self):
@@ -99,8 +100,8 @@ class MyWin(QtWidgets.QMainWindow):
         dbData = self.getDataPrep(self.idData)
         fillData = self.getFillData(self.idData)
         self.fillVisuaData(self.idData, dbData, fillData, self.flFilter)
-        # self.clearDraw()
-        # self.drawMap(self.idData[0], self.idData[1], self.idYear)
+        self.clearDraw()
+        self.drawMap(dbData)
         return None
 
     def setIntermed(self):
@@ -108,8 +109,8 @@ class MyWin(QtWidgets.QMainWindow):
         dbData = self.getDataPrep(self.idData)
         fillData = self.getFillData(self.idData)
         self.fillVisuaData(self.idData, dbData, fillData, self.flFilter)
-        # self.clearDraw()
-        # self.drawMap(self.idData[0], self.idData[1], self.idYear)
+        self.clearDraw()
+        self.drawMap(dbData)
         return None
 
     def startAnl(self):
@@ -236,8 +237,16 @@ class MyWin(QtWidgets.QMainWindow):
         return None
 
     def drawMap(self, dbData):
-        x = dbData[0]
-        y = dbData[1]
+        if (dbData[1] != []):
+            x = np.arange(0, len(dbData[1]), 1)
+            y = dbData[1]
+        else:
+            x = []
+            y = []
+
+        # x = np.arange(1,7,1)
+        # y = [3,4,2,1,3,5]
+
         self.plot.autoFillBackground()
         self.plot.setTitle("A Simple Map Demonstration")
         self.plot.setCanvasBackground(Qt.white)
