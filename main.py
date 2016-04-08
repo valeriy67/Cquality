@@ -8,6 +8,7 @@ from PyQt5.QtGui import QIcon, QPen
 from interface import *
 from dlgselect import *
 from dlgmodifyui import *
+from dlgfilter import *
 from statistics import *
 
 from qwt import QwtPlot, QwtPlotCurve
@@ -120,7 +121,16 @@ class MyWin(QtWidgets.QMainWindow):
         pass
 
     def startFilter(self):
-        pass
+        dialog = DlgFilter()
+        result = dialog.exec()
+        if result == dialog.Accepted:
+            fltrStartText = dialog.fltr.lineStart.text()
+            fltrEndText = dialog.fltr.lineEnd.text()
+            print ("ОК")
+        # Отримуємо дані з діалового вікна
+        else:
+            print ("Cancel")
+        return
 
     def stopFilter(self):
         pass
