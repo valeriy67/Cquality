@@ -121,19 +121,21 @@ class MyWin(QtWidgets.QMainWindow):
         pass
 
     def startFilter(self):
+        self.flFilter = True
         dialog = DlgFilter()
         result = dialog.exec()
+        # Отримуємо дані з діалового вікна
         if result == dialog.Accepted:
             fltrStartText = dialog.fltr.lineStart.text()
             fltrEndText = dialog.fltr.lineEnd.text()
             print ("ОК")
-        # Отримуємо дані з діалового вікна
         else:
             print ("Cancel")
         return
 
     def stopFilter(self):
-        pass
+        self.flFilter = False
+        return
 
     def printPdf(self):
         pass
